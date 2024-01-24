@@ -8,13 +8,6 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
     using AddressUpgradeable for address payable;
     using AddressUpgradeable for address;
 
-    /// @notice Allow to add a new partner to correct rewards distribution
-    /// @param _partner Partner's pool contract address
-    function addPartner(address _partner) external onlyRole(MANAGER) {
-        isPartner[_partner] = true;
-        partners.push(_partner);
-    }
-
     /// @notice add new staker and save balances
     /// @param  _addr => user to add
     /// @param  _utility => user utility
@@ -32,17 +25,14 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
             dapps[_utility].stakers[_addr].lastClaimedEra = this.currentEra() + 1;
     }
 
+    /// @notice set list with dapps names
+    /// @param _dappsList dapps names
     function setDappsList(string[] memory _dappsList) external onlyRole(MANAGER) {
         require(_dappsList.length != 0, "Empty array");
         dappsList = _dappsList;
     }
 
-    function setMaxDappsAmountPerCall(uint256 _maxDappsAmountPerCall) external onlyRole(MANAGER) {
-        require(_maxDappsAmountPerCall > 0, "Should be > 0");
-        maxDappsAmountPerCall = _maxDappsAmountPerCall;
-    }
-
-    /// @dev necessary for withdrawing bonus rewards and their further distribution
+    /// @notice necessary for withdrawing bonus rewards and their further distribution
     function withdrawBonusRewards() external onlyRole(MANAGER) {
         require(bonusRewardsPool > 0, "bonusRewardsPool is emply");
 
@@ -54,6 +44,7 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
         emit WithdrawBonusRewards(msg.sender, this.currentPeriod(), toSend);
     }
 
+    /// @notice add partner dapp
     function addDapp(string memory _dappName, address _dappAddr) external onlyRole(MANAGER) {
         Dapp storage dapp = dapps[_dappName];
         require(dapp.dappAddress != address(0), "Dapp is already added");
@@ -62,10 +53,13 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
         isActive[_dappName] = true;
     }
 
+    /// @notice switch dapp status active/inactive. Not available to stake to inactive dapp
+    /// @param _dappName name of one of the available dapps
     function toggleDappAvailability(string memory _dappName) external onlyRole(MANAGER) {
         isActive[_dappName] = !isActive[_dappName];
     }
 
+    /// @notice set adapterDistributor address, to keep updated user balances in adapters
     function setAdaptersDistributor(address _adistr) external onlyRole(MANAGER) {
         require(_adistr != address(0), "Zero address error");
         adaptersDistr = IAdaptersDistributor(_adistr);
@@ -79,7 +73,8 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
         emit SetMinStakeAmount(msg.sender, _amount);
     }
 
-    /// @notice Withdraw revenue
+    /// @notice withdraw revenue
+    /// @param _amount amount to withdraw
     function withdrawRevenue(uint256 _amount) external onlyRole(MANAGER) {
         require(totalRevenue >= _amount, "Not enough funds in revenue pool");
         totalRevenue -= _amount;

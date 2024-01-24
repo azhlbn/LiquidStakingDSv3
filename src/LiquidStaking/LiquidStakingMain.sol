@@ -23,7 +23,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         _;
     }
 
-    /// @notice only distributor modifier
+    /// @notice only distributors modifier
     modifier onlyDistributor() {
         require(
             msg.sender == address(distr) ||
@@ -39,7 +39,9 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
 
         // harvest rewards for current balances
         for (uint256 i; i < l; i++) _harvestRewards(_utilities[i], _user);
+
         _;
+
         // update balances in utils
         for (uint256 i; i < l; i++)
             _updateUserBalanceInUtility(_utilities[i], _user);
@@ -64,35 +66,35 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         uint256 value = msg.value;
 
         uint256 utilitiesLength = _utilities.length;
-        uint256 _stakeAmount;
+        uint256 stakeAmount;
 
         for (uint256 i; i < utilitiesLength; i++) {
             require(isActive[_utilities[i]], "Dapp not active");
             require(_amounts[i] >= minStakeAmount, "Not enough stake amount");
 
-            _stakeAmount += _amounts[i];
+            stakeAmount += _amounts[i];
         }
 
-        require(_stakeAmount > 0, "Incorrect amounts");
-        require(value >= _stakeAmount, "Incorrect value");
+        require(stakeAmount > 0, "Incorrect amounts");
+        require(value >= stakeAmount, "Incorrect value");
 
-        eraBuffer[0] += _stakeAmount;
+        eraBuffer[0] += stakeAmount;
         uint256 _era = currentEra();
 
         if (!isStaker[msg.sender]) {
             isStaker[msg.sender] = true;
         }
 
-        totalBalance += _stakeAmount;
+        totalBalance += stakeAmount;
 
         // send back the diff
-        payable(msg.sender).sendValue(value - _stakeAmount);
+        if (value > stakeAmount) payable(msg.sender).sendValue(value - stakeAmount);
 
         // increase total stake amount and for msg.sender for current subperiod
-        _updateSubperiodStakes(int256(_stakeAmount));
+        _updateSubperiodStakes(int256(stakeAmount));
 
         // lock total stake amount to further stake
-        DAPPS_STAKING.lock(uint128(_stakeAmount));
+        DAPPS_STAKING.lock(uint128(stakeAmount));
 
         for (uint256 i; i < utilitiesLength; i++) {
             if (dapps[_utilities[i]].stakers[msg.sender].lastClaimedEra == 0)
@@ -119,7 +121,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
             }
         } // prettier-ignore
 
-        emit Staked(msg.sender, _stakeAmount);
+        emit Staked(msg.sender, stakeAmount);
     }
 
     /// @notice unstake tokens from dapps
@@ -340,7 +342,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         uint256 eras = _era - lastUpdated;
 
         uint256 allErasBalance = lastEraTotalBalance *
-            eras + eraBuffer[0] * (eras - 1) - eraBuffer[1] * (eras - 1); // prettier-ignore
+            eras + eraBuffer[0] * (eras - 1) - eraBuffer[1] * (eras - 1); 
 
         if (allErasBalance > 0) {
             uint256[2] memory erasData = nftDistr.getErasData(
@@ -348,10 +350,10 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
                 _era - 1
             );
 
-            uint256 rewardsK = receivedRewards * REWARDS_PRECISION / allErasBalance; // prettier-ignore
+            uint256 rewardsK = receivedRewards * REWARDS_PRECISION / allErasBalance; 
             uint256 nftRevenue = (rewardsK * erasData[1]) / 
                 (100 * REWARDS_PRECISION);
-            uint256 defaultRevenue = rewardsK * REVENUE_FEE * (allErasBalance - erasData[0]) / (100 * REWARDS_PRECISION); // prettier-ignore
+            uint256 defaultRevenue = rewardsK * REVENUE_FEE * (allErasBalance - erasData[0]) / (100 * REWARDS_PRECISION); 
 
             for (uint256 i = lastUpdated; i < _era; i = _uncheckedIncr(i)) {
                 accumulatedRewardsPerShare[i] = rewardsK;
@@ -360,7 +362,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
             uint256 toUnstaking = receivedRewards / 100;
             totalRevenue += nftRevenue + defaultRevenue; // 9% of era reward s goes to revenue pool
             unstakingPool += toUnstaking; // 1% of era rewards goes to unstaking pool
-            rewardPool += receivedRewards - nftRevenue - defaultRevenue - toUnstaking; // prettier-ignore
+            rewardPool += receivedRewards - nftRevenue - defaultRevenue - toUnstaking; 
         } else totalRevenue += receivedRewards;
 
         (eraBuffer[0], eraBuffer[1]) = (0, 0);
@@ -368,10 +370,11 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         // update last era balance
         // last era balance = balance that participates in the current era
         lastEraTotalBalance = distr.totalDnt(DNTname);
-    }
+    } // prettier-ignore
 
     /// @notice claim dapp rewards for this contract
     /// @dev the function collects rewards only for the LiquidStaking contract
+    /// @param _currentEra => era to claim dapp rewards
     function _claimDapp(uint _currentEra) internal {
         for (uint256 era = lastUpdated; era < _currentEra; era = _uncheckedIncr(era)) {
             uint256 balanceBefore = address(this).balance;
@@ -572,6 +575,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
     }
 
     /// @dev Updates subperiod stakes. Increase in stake case and decrease if unstake
+    /// @param _amount => amount to increase or decrease stake size. Positive if its a stake and negative if its an unstake.
     function _updateSubperiodStakes(int256 _amount) internal {
         uint256 currentPeriodNumber = currentPeriod();
         Period storage period = periods[currentPeriodNumber];
@@ -592,6 +596,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         );
     }
 
+    /// @notice performed at the beginning of new period and restakes ASTR
     function _periodUpdate() internal {
         uint256 currentPeriodNumber = currentPeriod();
         Period storage period = periods[currentPeriodNumber];
