@@ -1,66 +1,68 @@
-## Foundry
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+![Algem](https://github.com/azhlbn/LendingAdapter/blob/main/logo.png)
 
-Foundry consists of:
+## Liquid Staking v1.5 adapted to Dapps Staking v3
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+The LiquidCrowdloan contract allows users to use their ASTR tokens to receive allocations in the form of ALGM tokens, while during the lock period of their ASTR tokens, they receive aASTR tokens. 
+During the Crowdloan period, the contract accepts users' ASTR tokens and uses them in Astar's DappsStaking. For each user, aASTR tokens equivalent to the size of their stake are minted. At the end of the Crowdloan period, vesting is created, and for 6 months, each user receives rewards in the form of ALGM tokens. When the distribution ends, there is an opportunity to withdraw ASTR tokens in exchange for the previously received aASTR.
 
-## Documentation
+### The functionality
 
-https://book.getfoundry.sh/
+- `stake` 
+  Deposit ASTR tokens and receive aASTR in return
 
-## Usage
+- `unstake` 
+  Transfer of aASTR to start the unbonding period
 
-### Build
+- `withdraw`
+   Withdrawal of previously staked ASTR after the unbonding period has passed
 
-```shell
-$ forge build
-```
+- `claimReawards`
+  Receiving distributed ALGM tokens
 
-### Test
+- `becomeReferrer` 
+  Become a referrer and receive a referral link
+  
 
-```shell
-$ forge test
-```
+## ALGMVesting
 
-### Format
+### The functionality
 
-```shell
-$ forge fmt
-```
+### Vesting
 
-### Gas Snapshots
+- Create vesting for a beneficiary
+- Revoke created vesting
+  - If this was implied during creating
+  - Tokens accumulated to the moment of revoking will be sent to beneficiary
+  - Remaining tokens will be available for withdrawal by manager
+- Claim of tokens accumulated in vesting
+- Withdraw tokens from revoked vestings
 
-```shell
-$ forge snapshot
-```
+### Mass Vesting
 
-### Anvil
+- Create vesting for set of beneficiaries
+- Revoke created vesting
+  - If this was implied during creating
+  - Tokens accumulated to the moment of revoking will NOT be sent to beneficiaries
+- Claim of tokens accumulated in mass vesting
+- Withdraw tokens from revoked mass vestings
 
-```shell
-$ anvil
-```
+### Airdrop
 
-### Deploy
+- Top up AirdropPool
+  - Amount being added to pool should be equal to the sum of all airdrop receivers amounts
+  - E.g: 10K users eligible for 10K ALGM each, AP should contain `10K*10K` tokens
+  - Topping up airdrop pool automatically unlocks third of that amount being added
+- Withdraw unclaimemd tokens from AirdropPool
+- 6 month airdrop period should be over
+- Unlock portion of airdrop
+- Claim airdropped tokens
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+### Management
 
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+- Change admin
+  - Pass `ADMIN` role to another address
+  - Used for manager controlling operations
+- Add manager
+- Delete manager
+- Withdraw stuck ERC20 tokens
