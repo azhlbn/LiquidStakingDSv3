@@ -44,9 +44,7 @@ If a user owns a native Algem NFT, they are eligible for a discount when paying 
 - claim/claimAll
 - withdraw
 
-## Dapps Staking V3 update
-
-The files that have been modified:
+## Dapps Staking V3 update struture
 
 ```src/
 ----interfaces/
