@@ -37,7 +37,7 @@ Contracts are implemented using the Diamond pattern, and the main contract that 
 
 If a user owns a native Algem NFT, they are eligible for a discount when paying fees for Dapps Staking rewards. `NFTDistributor` is used to account for tokens ownership.
 
-## The functionality
+## The main functionality
 
 - stake
 - unstake
@@ -45,6 +45,8 @@ If a user owns a native Algem NFT, they are eligible for a discount when paying 
 - withdraw
 
 ## Dapps Staking V3 update
+
+The files that have been modified:
 
 ```src/
 ----interfaces/
@@ -55,4 +57,3 @@ If a user owns a native Algem NFT, they are eligible for a discount when paying 
 LiquidStakingMain.sol
 LiquidStakingAdmin.sol
 ```
-
