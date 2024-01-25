@@ -118,7 +118,7 @@ contract Deployer is Script {
     }
 }
 
-// deployed contracts
+// deployed contracts Shibuya
 // lsProxy 0x4221A3DB650B568Eb7d53F130E2F8C136fd1e3Fd
 // managerProxy 0x1908D4c618ACEC1Ee5D510d876244eCa7b4D740c
 // distrProxy 0x97A232D71FA5F69405D3C48a64a39bC05911EB1A
