@@ -50,99 +50,81 @@ contract Deployer is Script {
         bytes4(0x1ee433bf), bytes4(0x8bf34237), bytes4(0xe932b37b), bytes4(0x43a37564), bytes4(0x25dc5807), bytes4(0x4fbbea95), bytes4(0x11ac7c0f), bytes4(0xef9f56cc)
     ];
 
-    function setUp() public {
-
-        // manager = LiquidStakingManager(address(managerProxy));
-        // + manager.initialize();
-
-        // distr = NDistributor(address(distrProxy));
-        // + distr.initialize();
-        // + distr.addUtility("LiquidStaking");
-
-        // nastr = NASTR(address(nastrProxy));
-        // + nastr.initialize(address(distr));
-
-        // + distr.grantRole(keccak256("MANAGER_CONTRACT"), address(nastr));
-
-        // ls = LiquidStaking(payable(address(lsProxy)));
-        // + ls.initialize(
-        //     "nASTR",
-        //     "LiquidStaking",
-        //     address(distr)
-        // );
-
-        // nftdistr = NFTDistributor(address(nftdistrProxy));
-        // + nftdistr.initialize(
-        //     address(distr),
-        //     address(nastr),
-        //     address(ls),
-        //     address(adistrProxy)
-        // );
-
-        // + nastr.setNftDistributor(address(nftdistr));
-
-        // adistr = AdaptersDistributor(address(adistrProxy));
-        // + adistr.initialize(address(ls));
-        // + adistr.setNftDistributor(address(nftdistr));
-
-        // ls.setLiquidStakingManager(address(manager));
-
-        // lsMain = new LiquidStakingMain();
-
-        // manager.addSelectorsBatch(
-        //     selectorsMain,
-        //     address(lsMain)
-        // );
-    }
+    function setUp() public {}
 
     function run() public {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        // admin = new ProxyAdmin();
+        admin = new ProxyAdmin();
 
-        // lsImpl = new LiquidStaking();
-        // managerImpl = new LiquidStakingManager();
-        // distrImpl = new NDistributor();
-        // nastrImpl = new NASTR();
-        // nftdistrImpl = new NFTDistributor();
-        // adistrImpl = new AdaptersDistributor();
+        lsImpl = new LiquidStaking();
+        managerImpl = new LiquidStakingManager();
+        distrImpl = new NDistributor();
+        nastrImpl = new NASTR();
+        nftdistrImpl = new NFTDistributor();
+        adistrImpl = new AdaptersDistributor();
 
-        // lsProxy = new TransparentUpgradeableProxy(address(lsImpl), address(admin), "");
-        // managerProxy = new TransparentUpgradeableProxy(address(managerImpl), address(admin), "");
-        // distrProxy = new TransparentUpgradeableProxy(address(distrImpl), address(admin), "");
-        // nastrProxy = new TransparentUpgradeableProxy(address(nastrImpl), address(admin), "");
-        // nftdistrProxy = new TransparentUpgradeableProxy(address(nftdistrImpl), address(admin), "");
-        // adistrProxy = new TransparentUpgradeableProxy(address(adistrImpl), address(admin), "");
+        lsProxy = new TransparentUpgradeableProxy(address(lsImpl), address(admin), "");
+        managerProxy = new TransparentUpgradeableProxy(address(managerImpl), address(admin), "");
+        distrProxy = new TransparentUpgradeableProxy(address(distrImpl), address(admin), "");
+        nastrProxy = new TransparentUpgradeableProxy(address(nastrImpl), address(admin), "");
+        nftdistrProxy = new TransparentUpgradeableProxy(address(nftdistrImpl), address(admin), "");
+        adistrProxy = new TransparentUpgradeableProxy(address(adistrImpl), address(admin), "");
 
-        // console2.log(address(lsProxy)); // 0x4221A3DB650B568Eb7d53F130E2F8C136fd1e3Fd
-        // console2.log(address(managerProxy)); // 0x1908D4c618ACEC1Ee5D510d876244eCa7b4D740c
-        // console2.log(address(distrProxy)); // 0x97A232D71FA5F69405D3C48a64a39bC05911EB1A
-        // console2.log(address(nastrProxy)); // 0xf03715D3B8974556C2F79871d779Fe355Af83a51
-        // console2.log(address(nftdistrProxy)); // 0xAF6335653A791e7e20d4aaDA0879E937283F485C
-        // console2.log(address(adistrProxy)); // 0x1bbD44442e09a35798e68B183c198ea8d6456387
+        manager = LiquidStakingManager(address(managerProxy));
+        manager.initialize();
 
-        // lsMain = new LiquidStakingMain();
-        // lsAdmin = new LiquidStakingAdmin();
-        // console2.log(address(lsMain)); //0x54bFE65f4E548C94e4B20087aE437403481089d7
-        // console2.log(address(lsAdmin)); //0x4Ec9b2faf884810D8fF4Ff19aC42F438398AAcbA
- 
-        // manager = LiquidStakingManager(0x1908D4c618ACEC1Ee5D510d876244eCa7b4D740c);
-        // manager.addSelectorsBatch(
-        //     selectorsMain,
-        //     0x54bFE65f4E548C94e4B20087aE437403481089d7
-        // );
-        // manager.addSelectorsBatch(
-        //     selectorsAdmin,
-        //     0x4Ec9b2faf884810D8fF4Ff19aC42F438398AAcbA
-        // );
+        distr = NDistributor(address(distrProxy));
+        distr.initialize();
+        distr.addUtility("LiquidStaking");
 
-        // lsMisc = new LiquidStakingMisc();
-        // console2.log(address(lsMisc)); // 0xd1f3CC589f2DC0ceBC6Be2546b973117c842718d
+        nastr = NASTR(address(nastrProxy));
+        nastr.initialize(address(distr));
 
-        ls = new LiquidStaking();
-        console2.log(address(ls)); //0x4700c6795f8Acb98F397C13812D508780428C476
+        distr.grantRole(keccak256("MANAGER_CONTRACT"), address(nastr));
+
+        ls = LiquidStaking(payable(address(lsProxy)));
+        ls.initialize(
+            "nASTR",
+            "LiquidStaking",
+            address(distr)
+        );
+
+        nftdistr = NFTDistributor(address(nftdistrProxy));
+        nftdistr.initialize(
+            address(distr),
+            address(nastr),
+            address(ls),
+            address(adistrProxy)
+        );
+
+        nastr.setNftDistributor(address(nftdistr));
+
+        adistr = AdaptersDistributor(address(adistrProxy));
+        adistr.initialize(address(ls));
+        adistr.setNftDistributor(address(nftdistr));
+
+        ls.setLiquidStakingManager(address(manager));
+
+        lsMain = new LiquidStakingMain();
+
+        manager.addSelectorsBatch(
+            selectorsMain,
+            address(lsMain)
+        );
 
         vm.stopBroadcast();
     }
 }
+
+// deployed contracts
+// lsProxy 0x4221A3DB650B568Eb7d53F130E2F8C136fd1e3Fd
+// managerProxy 0x1908D4c618ACEC1Ee5D510d876244eCa7b4D740c
+// distrProxy 0x97A232D71FA5F69405D3C48a64a39bC05911EB1A
+// nastrProxy 0xf03715D3B8974556C2F79871d779Fe355Af83a51
+// nftdistrProxy 0xAF6335653A791e7e20d4aaDA0879E937283F485C
+// adistrProxy  0x1bbD44442e09a35798e68B183c198ea8d6456387
+// lsMain 0x54bFE65f4E548C94e4B20087aE437403481089d7
+// lsAdmin 0x4Ec9b2faf884810D8fF4Ff19aC42F438398AAcbA
+// lsMisc 0xd1f3CC589f2DC0ceBC6Be2546b973117c842718d

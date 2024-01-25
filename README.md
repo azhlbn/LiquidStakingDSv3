@@ -1,12 +1,13 @@
 
 ![Algem](https://github.com/azhlbn/LendingAdapter/blob/main/logo.png)
 
-## Liquid Staking v1.5 adapted to Dapps Staking v3
+# Liquid Staking v1.5
 
-The LiquidCrowdloan contract allows users to use their ASTR tokens to receive allocations in the form of ALGM tokens, while during the lock period of their ASTR tokens, they receive aASTR tokens. 
-During the Crowdloan period, the contract accepts users' ASTR tokens and uses them in Astar's DappsStaking. For each user, aASTR tokens equivalent to the size of their stake are minted. At the end of the Crowdloan period, vesting is created, and for 6 months, each user receives rewards in the form of ALGM tokens. When the distribution ends, there is an opportunity to withdraw ASTR tokens in exchange for the previously received aASTR.
+This version is adapted for [Dapps Staking V3](https://github.com/AstarNetwork/Astar/tree/master/precompiles/dapp-staking-v3).
 
-### The functionality
+Algem - iquidStaking serves as an intermediary between the user and [Astar's Dapp Staking](https://portal.astar.network/astar/dapp-staking/discover). The user can choose the application in which they want to stake their ASTR, and after staking, they receive an equivalent amount of nASTR, which can be used in other DeFi instruments later on.
+
+## The functionality
 
 - `stake` 
   Deposit ASTR tokens and receive aASTR in return
