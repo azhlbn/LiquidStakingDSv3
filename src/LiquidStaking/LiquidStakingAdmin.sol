@@ -3,7 +3,6 @@ pragma solidity 0.8.4;
 
 import "@openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
 import "./LiquidStakingStorage.sol";
-import "../libraries/Errors.sol";
 
 contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
     using AddressUpgradeable for address payable;
@@ -23,15 +22,6 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
             dapps[_utility].stakers[_addr].lastClaimedEra =
                 this.currentEra() +
                 1;
-    }
-
-    /// @notice set list with dapps names
-    /// @param _dappsList dapps names
-    function setDappsList(
-        string[] memory _dappsList
-    ) external payable onlyRole(MANAGER) {
-        if (_dappsList.length == 0) revert Err.EmptyArray();
-        dappsList = _dappsList;
     }
 
     /// @notice necessary for withdrawing bonus rewards and their further distribution
@@ -56,6 +46,7 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
 
         dapp.dappAddress = _dappAddr;
         isActive[_dappName] = true;
+        dappsList.push(_dappName);
     }
 
     /// @notice switch dapp status active/inactive. Not available to stake to inactive dapp
@@ -122,7 +113,7 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
         );
 
         // change address
-        dapp.dappAddress = 0xc5b016c5597d298fe9ed22922ce290a048aa5b75;
+        dapp.dappAddress = 0xc5b016c5597D298Fe9eD22922CE290A048aA5B75;
 
         // stake unstaked ASTR to new address
         DAPPS_STAKING.stake(

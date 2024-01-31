@@ -6,7 +6,6 @@ library Err {
     error ArraysLengthMismatch();
     error DappAlreadyAdded();
     error DappInactive();
-    error EmptyArray();
     error EmptyBonusRewardPool();
     error EraUpdated();
     error EraYetToCome();

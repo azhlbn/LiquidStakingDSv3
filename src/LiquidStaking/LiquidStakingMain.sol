@@ -3,7 +3,6 @@ pragma solidity 0.8.4;
 
 import "@openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
 import "./LiquidStakingStorage.sol";
-import "../libraries/Errors.sol";
 
 contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
     using AddressUpgradeable for address payable;
@@ -434,7 +433,6 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         Dapp storage dapp = dapps[_utility];
 
         if (dapp.sum2unstake == 0) return;
-        if (!isActive[_utility] && _era > deactivationEra[_utility]) return;
 
         try DAPPS_STAKING.unstake(
                 DappsStaking.SmartContract(
