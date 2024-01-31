@@ -28,13 +28,13 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
     /// @param _dappsList dapps names
     function setDappsList(
         string[] memory _dappsList
-    ) external onlyRole(MANAGER) {
+    ) external payable onlyRole(MANAGER) {
         require(_dappsList.length != 0, "Empty array");
         dappsList = _dappsList;
     }
 
     /// @notice necessary for withdrawing bonus rewards and their further distribution
-    function withdrawBonusRewards() external onlyRole(MANAGER) {
+    function withdrawBonusRewards() external payable onlyRole(MANAGER) {
         require(bonusRewardsPool != 0, "bonusRewardsPool is emply");
 
         uint256 toSend = bonusRewardsPool;
@@ -49,7 +49,7 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
     function addDapp(
         string memory _dappName,
         address _dappAddr
-    ) external onlyRole(MANAGER) {
+    ) external payable onlyRole(MANAGER) {
         Dapp storage dapp = dapps[_dappName];
         require(dapp.dappAddress != address(0), "Dapp is already added");
 
@@ -61,21 +61,21 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
     /// @param _dappName name of one of the available dapps
     function toggleDappAvailability(
         string memory _dappName
-    ) external onlyRole(MANAGER) {
+    ) external payable onlyRole(MANAGER) {
         isActive[_dappName] = !isActive[_dappName];
     }
 
     /// @notice set adapterDistributor address, to keep updated user balances in adapters
     function setAdaptersDistributor(
         address _adistr
-    ) external onlyRole(MANAGER) {
+    ) external payable onlyRole(MANAGER) {
         require(_adistr != address(0), "Zero address error");
         adaptersDistr = IAdaptersDistributor(_adistr);
     }
 
     /// @notice sets min stake amount
     /// @param _amount => new min stake amount
-    function setMinStakeAmount(uint _amount) public onlyRole(MANAGER) {
+    function setMinStakeAmount(uint _amount) public payable onlyRole(MANAGER) {
         require(_amount != 0, "Should be greater than zero!");
         minStakeAmount = _amount;
         emit SetMinStakeAmount(msg.sender, _amount);
@@ -83,7 +83,9 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
 
     /// @notice withdraw revenue
     /// @param _amount amount to withdraw
-    function withdrawRevenue(uint256 _amount) external onlyRole(MANAGER) {
+    function withdrawRevenue(
+        uint256 _amount
+    ) external payable onlyRole(MANAGER) {
         require(totalRevenue >= _amount, "Not enough funds in revenue pool");
         totalRevenue -= _amount;
         payable(msg.sender).sendValue(_amount);
@@ -93,7 +95,9 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
 
     /// @notice Withdraw rewards overage. Calculates offchain.
     ///         Formed when users use their nASTR tokens in defi protocols bypassing algem-adapters.
-    function withdrawOverage(uint256 amount) external onlyRole(MANAGER) {
+    function withdrawOverage(
+        uint256 amount
+    ) external payable onlyRole(MANAGER) {
         rewardPool -= amount;
         payable(msg.sender).sendValue(amount);
     }
