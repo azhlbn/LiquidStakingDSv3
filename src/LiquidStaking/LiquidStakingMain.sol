@@ -288,7 +288,8 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
 
     /// @notice utility function in case of excess gas consumption
     function sync(uint _era) external onlyRole(MANAGER) {
-        require(_era > lastUpdated && _era <= currentEra(), "Wrong era range");
+        require(_era > lastUpdated, "Era passed");
+        require(_era <= currentEra(), "Era yet to come");
         _updates(_era);
 
         emit Synchronization(msg.sender, _era);
