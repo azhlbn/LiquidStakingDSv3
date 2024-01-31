@@ -77,7 +77,9 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
 
     /// @notice sets min stake amount
     /// @param _amount => new min stake amount
-    function setMinStakeAmount(uint _amount) public payable onlyRole(MANAGER) {
+    function setMinStakeAmount(
+        uint _amount
+    ) external payable onlyRole(MANAGER) {
         if (_amount == 0) revert Err.ZeroAmount();
 
         minStakeAmount = _amount;
@@ -125,9 +127,9 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
         // stake unstaked ASTR to new address
         DAPPS_STAKING.stake(
             DappsStaking.SmartContract(
-                    DappsStaking.SmartContractType.EVM,
-                    abi.encodePacked(dapp.dappAddress)
-                ),
+                DappsStaking.SmartContractType.EVM,
+                abi.encodePacked(dapp.dappAddress)
+            ),
             uint128(toRestake)
         );
     }
@@ -139,7 +141,7 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
         address _user,
         uint256 _era
     )
-        public
+        external
         view
         returns (
             uint256 eraBalance_,
