@@ -3,6 +3,7 @@ pragma solidity 0.8.4;
 
 import "@openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
 import "./LiquidStakingStorage.sol";
+import "../libraries/Errors.sol";
 
 contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
     using AddressUpgradeable for address payable;
@@ -15,11 +16,9 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         string[] memory _utilities,
         uint256[] memory _amounts
     ) {
-        require(_utilities.length != 0, "No one utility selected");
-        require(
-            _utilities.length == _amounts.length,
-            "Incorrect arrays length"
-        );
+        if (_utilities.length == 0) revert Err.NoUtilitySpecified();
+        if (_utilities.length != _amounts.length)
+            revert Err.ArraysLengthMismatch();
         _;
     }
 
@@ -69,14 +68,14 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         uint256 stakeAmount;
 
         for (uint256 i; i < utilitiesLength; ++i) {
-            require(isActive[_utilities[i]], "Dapp not active");
-            require(_amounts[i] >= minStakeAmount, "Not enough stake amount");
+            if (!isActive[_utilities[i]]) revert Err.DappInactive();
+            if (_amounts[i] < minStakeAmount) revert Err.InsufficientAmount();
 
             stakeAmount += _amounts[i];
         }
 
-        require(stakeAmount != 0, "Incorrect amounts");
-        require(value >= stakeAmount, "Incorrect value");
+        if (stakeAmount == 0) revert Err.ZeroAmount();
+        if (value < stakeAmount) revert Err.InsufficientValue();
 
         eraBuffer[0] += stakeAmount;
         uint256 _era = currentEra();
@@ -139,7 +138,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
 
         uint256 utilitiesLength = _utilities.length;
         for (uint256 i; i < utilitiesLength; ++i) {
-            require(haveUtility[_utilities[i]], "Unknown utility");
+            if (!haveUtility[_utilities[i]]) revert Err.UnknownUtility();
 
             if (_amounts[i] != 0) {
                 string memory _utility = _utilities[i];
@@ -258,13 +257,15 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         uint val = withdrawal.val;
         uint era = currentEra();
 
-        require(withdrawal.eraReq != 0, "Withdrawal already claimed");
+        if (withdrawal.eraReq == 0) revert Err.AlreadyClaimed();
+
         require(
             era * 10 - withdrawal.eraReq * 10 >=
                 withdrawBlock * 10 + withdrawal.lag,
             "Not enough eras passed!"
         );
-        require(unbondedPool >= val, "Unbonded pool drained!");
+
+        if (unbondedPool < val) revert Err.UnbondedPoolInsufficientFunds();
 
         unbondedPool -= val;
         withdrawal.eraReq = 0;
@@ -288,8 +289,9 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
 
     /// @notice utility function in case of excess gas consumption
     function sync(uint _era) external payable onlyRole(MANAGER) {
-        require(_era > lastUpdated, "Era passed");
-        require(_era <= currentEra(), "Era yet to come");
+        if (_era <= lastUpdated) revert Err.EraUpdated();
+        if (_era > currentEra()) revert Err.EraYetToCome();
+
         _updates(_era);
 
         emit Synchronization(msg.sender, _era);
@@ -318,7 +320,8 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         string memory _utility,
         address _user
     ) external onlyDistributor {
-        require(_user != address(0), "Zero address alarm!");
+        if (_user == address(0)) revert Err.ZeroAddress();
+
         uint256 _amount = adaptersDistr.getUserBalanceInAdapters(_user);
         _updateUserBalance(_utility, _user, _amount);
     }
@@ -460,7 +463,8 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         string memory _utility,
         address _user
     ) internal {
-        require(_user != address(0), "Zero address alarm!");
+        if (_user == address(0)) revert Err.ZeroAddress();
+
         if (keccak256(bytes(_utility)) == keccak256("AdaptersUtility")) return;
         uint256 _amount = distr.getUserDntBalanceInUtil(
             _user,
@@ -517,7 +521,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         string[] memory _utilities,
         uint256[] memory _amounts
     ) internal {
-        require(!isPartner[msg.sender], "ClaimNotAllowedForPartnerPools");
+        if (isPartner[msg.sender]) revert Err.PartnerPoolsCanNotClaim();
 
         uint256 l = _utilities.length;
         uint256 transferAmount;
@@ -525,11 +529,11 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         for (uint256 i; i < l; ++i) {
             if (_amounts[i] != 0) {
                 Dapp storage dapp = dapps[_utilities[i]];
-                require(
-                    dapp.stakers[msg.sender].rewards >= _amounts[i],
-                    "Not enough rewards!"
-                );
-                require(rewardPool >= _amounts[i], "Rewards pool drained");
+
+                if (dapp.stakers[msg.sender].rewards < _amounts[i])
+                    revert Err.NotEnoughRewards();
+                if (rewardPool < _amounts[i])
+                    revert Err.RewardsPoolInsufficientFunds();
 
                 rewardPool -= _amounts[i];
                 dapp.stakers[msg.sender].rewards -= _amounts[i];
@@ -540,7 +544,8 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
             }
         }
 
-        require(transferAmount != 0, "Nothing to claim");
+        if (transferAmount == 0) revert Err.NothingToClaim();
+
         payable(msg.sender).sendValue(transferAmount);
 
         emit Claimed(msg.sender, transferAmount);

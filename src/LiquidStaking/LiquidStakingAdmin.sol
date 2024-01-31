@@ -3,6 +3,7 @@ pragma solidity 0.8.4;
 
 import "@openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
 import "./LiquidStakingStorage.sol";
+import "../libraries/Errors.sol";
 
 contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
     using AddressUpgradeable for address payable;
@@ -12,7 +13,7 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
     /// @param  _addr => user to add
     /// @param  _utility => user utility
     function addStaker(address _addr, string memory _utility) external {
-        require(msg.sender == address(distr), "Allowed only for NDistributor");
+        if (msg.sender != address(distr)) revert Err.OnlyNDistributorAllowed();
 
         if (!isStaker[_addr]) {
             isStaker[_addr] = true;
@@ -29,13 +30,13 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
     function setDappsList(
         string[] memory _dappsList
     ) external payable onlyRole(MANAGER) {
-        require(_dappsList.length != 0, "Empty array");
+        if (_dappsList.length == 0) revert Err.EmptyArray();
         dappsList = _dappsList;
     }
 
     /// @notice necessary for withdrawing bonus rewards and their further distribution
     function withdrawBonusRewards() external payable onlyRole(MANAGER) {
-        require(bonusRewardsPool != 0, "bonusRewardsPool is emply");
+        if (bonusRewardsPool == 0) revert Err.EmptyBonusRewardPool();
 
         uint256 toSend = bonusRewardsPool;
         bonusRewardsPool = 0;
@@ -51,7 +52,7 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
         address _dappAddr
     ) external payable onlyRole(MANAGER) {
         Dapp storage dapp = dapps[_dappName];
-        require(dapp.dappAddress != address(0), "Dapp is already added");
+        if (dapp.dappAddress == address(0)) revert Err.DappAlreadyAdded();
 
         dapp.dappAddress = _dappAddr;
         isActive[_dappName] = true;
@@ -69,14 +70,16 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
     function setAdaptersDistributor(
         address _adistr
     ) external payable onlyRole(MANAGER) {
-        require(_adistr != address(0), "Zero address error");
+        if (_adistr == address(0)) revert Err.ZeroAddress();
+
         adaptersDistr = IAdaptersDistributor(_adistr);
     }
 
     /// @notice sets min stake amount
     /// @param _amount => new min stake amount
     function setMinStakeAmount(uint _amount) public payable onlyRole(MANAGER) {
-        require(_amount != 0, "Should be greater than zero!");
+        if (_amount == 0) revert Err.ZeroAmount();
+
         minStakeAmount = _amount;
         emit SetMinStakeAmount(msg.sender, _amount);
     }
@@ -86,7 +89,8 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
     function withdrawRevenue(
         uint256 _amount
     ) external payable onlyRole(MANAGER) {
-        require(totalRevenue >= _amount, "Not enough funds in revenue pool");
+        if (totalRevenue < _amount) revert Err.RevenuePoolInsufficientFunds();
+
         totalRevenue -= _amount;
         payable(msg.sender).sendValue(_amount);
 
