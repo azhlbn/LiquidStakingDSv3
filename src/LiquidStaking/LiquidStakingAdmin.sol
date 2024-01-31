@@ -42,7 +42,7 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
         address _dappAddr
     ) external payable onlyRole(MANAGER) {
         Dapp storage dapp = dapps[_dappName];
-        if (dapp.dappAddress == address(0)) revert Err.DappAlreadyAdded();
+        if (dapp.dappAddress != address(0)) revert Err.DappAlreadyAdded();
 
         dapp.dappAddress = _dappAddr;
         isActive[_dappName] = true;
