@@ -43,7 +43,6 @@ contract LiquidStaking is AccessControlUpgradeable, LiquidStakingStorage, Proxy 
         lastClaimed = era;
 
         dappsList.push(_utilName);
-        haveUtility[_utilName] = true;
         isActive[_utilName] = true;
         dapps[_utilName].dappAddress = address(this);
 

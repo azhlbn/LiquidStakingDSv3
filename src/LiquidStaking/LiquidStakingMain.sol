@@ -137,8 +137,6 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
 
         uint256 utilitiesLength = _utilities.length;
         for (uint256 i; i < utilitiesLength; ++i) {
-            if (!haveUtility[_utilities[i]]) revert Err.UnknownUtility();
-
             if (_amounts[i] != 0) {
                 string memory _utility = _utilities[i];
                 uint256 _amount = _amounts[i];

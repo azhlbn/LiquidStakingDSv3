@@ -20,7 +20,6 @@ library Err {
     error RevenuePoolInsufficientFunds();
     error RewardsPoolInsufficientFunds();
     error UnbondedPoolInsufficientFunds();
-    error UnknownUtility();
     error ZeroAddress();
     error ZeroAmount();
 }
