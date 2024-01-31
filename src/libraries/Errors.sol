@@ -17,6 +17,7 @@ library Err {
     error NothingToClaim();
     error OnlyNDistributorAllowed();
     error PartnerPoolsCanNotClaim();
+    error ReentrantCall();
     error RevenuePoolInsufficientFunds();
     error RewardsPoolInsufficientFunds();
     error UnbondedPoolInsufficientFunds();

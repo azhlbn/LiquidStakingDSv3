@@ -86,10 +86,6 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
 
         totalBalance += stakeAmount;
 
-        // send back the diff
-        if (value > stakeAmount)
-            payable(msg.sender).sendValue(value - stakeAmount);
-
         // increase total stake amount and for msg.sender for current subperiod
         _updateSubperiodStakes(int256(stakeAmount));
 
@@ -121,6 +117,10 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
             }
         } // prettier-ignore
 
+        // send back the diff
+        if (value > stakeAmount)
+            payable(msg.sender).sendValue(value - stakeAmount);
+
         emit Staked(msg.sender, stakeAmount);
     }
 
@@ -132,7 +132,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         string[] memory _utilities,
         uint256[] memory _amounts,
         bool _immediate
-    ) external checkArrays(_utilities, _amounts) updateAll {
+    ) external checkArrays(_utilities, _amounts) updateAll reentrancyGuard {
         uint256 totalUnstaked;
         uint256 era = currentEra();
 
