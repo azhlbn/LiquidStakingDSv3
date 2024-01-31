@@ -15,7 +15,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         string[] memory _utilities,
         uint256[] memory _amounts
     ) {
-        require(_utilities.length > 0, "No one utility selected");
+        require(_utilities.length != 0, "No one utility selected");
         require(
             _utilities.length == _amounts.length,
             "Incorrect arrays length"
@@ -75,7 +75,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
             stakeAmount += _amounts[i];
         }
 
-        require(stakeAmount > 0, "Incorrect amounts");
+        require(stakeAmount != 0, "Incorrect amounts");
         require(value >= stakeAmount, "Incorrect value");
 
         eraBuffer[0] += stakeAmount;
@@ -88,7 +88,8 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         totalBalance += stakeAmount;
 
         // send back the diff
-        if (value > stakeAmount) payable(msg.sender).sendValue(value - stakeAmount);
+        if (value > stakeAmount)
+            payable(msg.sender).sendValue(value - stakeAmount);
 
         // increase total stake amount and for msg.sender for current subperiod
         _updateSubperiodStakes(int256(stakeAmount));
@@ -100,7 +101,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
             if (dapps[_utilities[i]].stakers[msg.sender].lastClaimedEra == 0)
                 dapps[_utilities[i]].stakers[msg.sender].lastClaimedEra = _era + 1;
 
-            if (_amounts[i] > 0) {
+            if (_amounts[i] != 0) {
                 string memory _utility = _utilities[i];
                 uint256 amount = _amounts[i];                
 
@@ -140,9 +141,9 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         for (uint256 i; i < utilitiesLength; i++) {
             require(haveUtility[_utilities[i]], "Unknown utility");
 
-            if (_amounts[i] > 0) {
+            if (_amounts[i] != 0) {
                 string memory _utility = _utilities[i];
-                uint256 _amount = _amounts[i];    
+                uint256 _amount = _amounts[i];
 
                 uint256 userDntBalance = distr.getUserDntBalanceInUtil(
                     msg.sender,
@@ -197,9 +198,9 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
                 );
             }
         }
-        if (totalUnstaked > 0) {
+        if (totalUnstaked != 0) {
             _updateSubperiodStakes(~int256(totalUnstaked) + 1); // convert arg to negative number
-            
+
             eraBuffer[1] += totalUnstaked;
 
             emit Unstaked(msg.sender, totalUnstaked, _immediate);
@@ -344,7 +345,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         uint256 allErasBalance = lastEraTotalBalance *
             eras + eraBuffer[0] * (eras - 1) - eraBuffer[1] * (eras - 1); 
 
-        if (allErasBalance > 0) {
+        if (allErasBalance != 0) {
             uint256[2] memory erasData = nftDistr.getErasData(
                 lastUpdated - 1,
                 _era - 1
@@ -423,7 +424,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
     /// @param _utility => utility to unstake
     /// @param _era => latest era to update
     function _globalUnstakeForUtility(
-        string memory _utility, 
+        string memory _utility,
         uint256 _era
     ) internal {
         Dapp storage dapp = dapps[_utility];
@@ -486,7 +487,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
 
         // add to mapping
         staker.eraBalance[_era] = _amount;
-        staker.isZeroBalance[_era] = _amount > 0 ? false : true;
+        staker.isZeroBalance[_era] = _amount != 0 ? false : true;
     }
 
     /// @notice function to update the user's balance upon unstaking in the current era
@@ -521,7 +522,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         uint256 transferAmount;
 
         for (uint256 i; i < l; i++) {
-            if (_amounts[i] > 0) {
+            if (_amounts[i] != 0) {
                 Dapp storage dapp = dapps[_utilities[i]];
                 require(
                     dapp.stakers[msg.sender].rewards >= _amounts[i],
@@ -538,7 +539,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
             }
         }
 
-        require(transferAmount > 0, "Nothing to claim");
+        require(transferAmount != 0, "Nothing to claim");
         payable(msg.sender).sendValue(transferAmount);
 
         emit Claimed(msg.sender, transferAmount);
@@ -558,7 +559,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         if (_updateUser) {
             // update all structures for storing balances and fees in specific eras to actual values
             dapps[_utility].stakers[_user].eraBalance[lastUpdated] = userEraBalance; // prettier-ignore
-            dapps[_utility].stakers[_user].isZeroBalance[lastUpdated] = userEraBalance > 0 ? false : true; // prettier-ignore
+            dapps[_utility].stakers[_user].isZeroBalance[lastUpdated] = userEraBalance != 0 ? false : true; // prettier-ignore
             nftDistr.updateUser(_utility, _user, lastUpdated - 1, userData[0]);
             nftDistr.updateUserFee(_user, newEraComission, lastUpdated - 1);
         }
@@ -600,7 +601,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
     function _periodUpdate() internal {
         uint256 currentPeriodNumber = currentPeriod();
         Period storage period = periods[currentPeriodNumber];
-        
+
         if (!period.initialized) return;
 
         period.initialized = true;
@@ -640,7 +641,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
             } catch (bytes memory reason) {
                 emit BonusRewardsClaimError(currentPeriodNumber, dappsList[idx], reason);
             } // prettier-ignore
-        }        
+        }
     }
 
     // READERS ////////////////////////////////////////////////////////////////////
@@ -699,9 +700,9 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         bool isUnique = nftDistr.isUnique(_utility);
 
         for (uint256 i = user.lastClaimedEra; i < lastUpdated; i = _uncheckedIncr(i)) {
-            if (userEraBalance > 0) {
+            if (userEraBalance != 0) {
                 // calcutating user rewards with user era fee
-                if (userData[0] > 0 && isUnique)
+                if (userData[0] != 0 && isUnique)
                     userEraFee = nftDistr.getBestUtilFee(_utility, userEraFee);
                 uint256 userEraRewards = (userEraBalance *
                     accumulatedRewardsPerShare[i]) / REWARDS_PRECISION;
@@ -723,7 +724,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
 
             // determine the user's fee in the next era
             uint8 _userNextEraFee = nftDistr.getUserEraFee(_user, i);
-            if (_userNextEraFee > 0) userEraFee = _userNextEraFee;
+            if (_userNextEraFee != 0) userEraFee = _userNextEraFee;
         } // prettier-ignore
 
         return (userData, userEraFee, userEraBalance, true);
