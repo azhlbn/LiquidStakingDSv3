@@ -178,8 +178,8 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
                 } else {
                     uint256 _lag;
 
-                    if (lastUnstaked * 10 + (withdrawBlock * 10) / 4 > era * 10) {
-                        _lag = lastUnstaked * 10 + (withdrawBlock * 10) / 4 - era * 10; 
+                    if (lastUnstaked * 10 + (withdrawBlock * 10) >> 2 > era * 10) {
+                        _lag = lastUnstaked * 10 + (withdrawBlock * 10) >> 2 - era * 10; 
                     } // prettier-ignore
 
                     // create a withdrawal to withdraw_unbonded later
@@ -410,7 +410,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
     /// @notice ustake tokens from not yet updated eras from all dapps
     /// @param _era => latest era to update
     function _globalUnstake(uint256 _era) internal {
-        if (_era * 10 < lastUnstaked * 10 + (withdrawBlock * 10) / 4) return;
+        if (_era * 10 < (lastUnstaked * 10 + (withdrawBlock * 10)) >> 2) return;
 
         // unstake from all dapps
         uint256 l = dappsList.length;
