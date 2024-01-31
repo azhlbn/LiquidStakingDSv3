@@ -620,7 +620,8 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         }
 
         // at the beginning of the period contract make restakes at all dapps and claim bonus rewards
-        for (uint256 idx; idx < dappsList.length; idx = _uncheckedIncr(idx)) {
+        uint256 l = dappsList.length;
+        for (uint256 idx; idx < l; idx = _uncheckedIncr(idx)) {
             try DAPPS_STAKING.stake(
                 DappsStaking.SmartContract(
                     DappsStaking.SmartContractType.EVM,
