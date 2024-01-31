@@ -122,7 +122,7 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
         );
 
         // change address
-        dapp.dappAddress = 0xc5b016c5597D298Fe9eD22922CE290A048aA5B75;
+        dapp.dappAddress = 0xc5b016c5597d298fe9ed22922ce290a048aa5b75;
 
         // stake unstaked ASTR to new address
         DAPPS_STAKING.stake(
