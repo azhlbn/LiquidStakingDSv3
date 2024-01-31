@@ -99,9 +99,12 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
         payable(msg.sender).sendValue(amount);
     }
 
-    /// @dev Since the Arthswap has been delisted from DappsStaking, it is necessary to restake ASTR to a new address
-    function arthswapUpdate() external onlyRole(MANAGER) {
-        Dapp storage dapp = dapps["ArthSwap"];
+    /// @notice Changing the application address in the event of delisting
+    function changeDappAddress(
+        string memory _dappName,
+        address _newAddress
+    ) external onlyRole(MANAGER) {
+        Dapp storage dapp = dapps[_dappName];
         uint256 toRestake = dapp.stakedBalance + dapp.sum2unstake;
 
         // unstake from deprecated address
@@ -113,7 +116,7 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
         );
 
         // change address
-        dapp.dappAddress = 0xc5b016c5597D298Fe9eD22922CE290A048aA5B75;
+        dapp.dappAddress = _newAddress;
 
         // stake unstaked ASTR to new address
         DAPPS_STAKING.stake(
