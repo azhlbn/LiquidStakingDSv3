@@ -297,7 +297,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         emit Synchronization(msg.sender, _era);
     }
 
-    /// @notice utility harvest function
+    /// @notice utility harvest function, function logic is in modifier
     function syncHarvest(
         address _user,
         string[] memory _utilities
