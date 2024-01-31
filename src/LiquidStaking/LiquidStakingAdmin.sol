@@ -104,7 +104,7 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
     ) external payable onlyRole(MANAGER) {
         rewardPool -= amount;
         payable(msg.sender).sendValue(amount);
-    }
+    }    
 
     // READERS ////////////////////////////////////////////////////////////////////
 
