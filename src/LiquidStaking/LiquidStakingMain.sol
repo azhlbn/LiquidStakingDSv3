@@ -38,12 +38,12 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         uint256 l = _utilities.length;
 
         // harvest rewards for current balances
-        for (uint256 i; i < l; i++) _harvestRewards(_utilities[i], _user);
+        for (uint256 i; i < l; ++i) _harvestRewards(_utilities[i], _user);
 
         _;
 
         // update balances in utils
-        for (uint256 i; i < l; i++)
+        for (uint256 i; i < l; ++i)
             _updateUserBalanceInUtility(_utilities[i], _user);
     }
 
@@ -68,7 +68,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         uint256 utilitiesLength = _utilities.length;
         uint256 stakeAmount;
 
-        for (uint256 i; i < utilitiesLength; i++) {
+        for (uint256 i; i < utilitiesLength; ++i) {
             require(isActive[_utilities[i]], "Dapp not active");
             require(_amounts[i] >= minStakeAmount, "Not enough stake amount");
 
@@ -97,7 +97,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         // lock total stake amount to further stake
         DAPPS_STAKING.lock(uint128(stakeAmount));
 
-        for (uint256 i; i < utilitiesLength; i++) {
+        for (uint256 i; i < utilitiesLength; ++i) {
             if (dapps[_utilities[i]].stakers[msg.sender].lastClaimedEra == 0)
                 dapps[_utilities[i]].stakers[msg.sender].lastClaimedEra = _era + 1;
 
@@ -138,7 +138,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         uint256 era = currentEra();
 
         uint256 utilitiesLength = _utilities.length;
-        for (uint256 i; i < utilitiesLength; i++) {
+        for (uint256 i; i < utilitiesLength; ++i) {
             require(haveUtility[_utilities[i]], "Unknown utility");
 
             if (_amounts[i] != 0) {
@@ -234,20 +234,20 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         string[] memory _utilities = new string[](l + 1);
 
         // basically we just need to append one utility :(
-        for (uint i; i < l; i++) {
+        for (uint i; i < l; ++i) {
             _utilities[i] = _distrutilities[i];
         }
         _utilities[l] = "AdaptersUtility";
 
         // update user rewards and push to _amounts[]
-        for (uint256 i; i < l + 1; i++) {
+        for (uint256 i; i < l + 1; ++i) {
             _harvestRewards(_utilities[i], msg.sender);
             _amounts[i] = dapps[_utilities[i]].stakers[msg.sender].rewards;
         }
         _claim(_utilities, _amounts);
 
         // update last user balance
-        for (uint256 i; i < l; i++)
+        for (uint256 i; i < l; ++i)
             _updateUserBalanceInUtility(_utilities[i], msg.sender);
     }
 
@@ -522,7 +522,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         uint256 l = _utilities.length;
         uint256 transferAmount;
 
-        for (uint256 i; i < l; i++) {
+        for (uint256 i; i < l; ++i) {
             if (_amounts[i] != 0) {
                 Dapp storage dapp = dapps[_utilities[i]];
                 require(
