@@ -517,7 +517,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         string[] memory _utilities,
         uint256[] memory _amounts
     ) internal {
-        require(!isPartner[msg.sender], "Claim not allowed for partner pools");
+        require(!isPartner[msg.sender], "ClaimNotAllowedForPartnerPools");
 
         uint256 l = _utilities.length;
         uint256 transferAmount;
