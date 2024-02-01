@@ -380,13 +380,22 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
     function _claimDapp(uint _currentEra) internal {
         for (uint256 era = lastUpdated; era < _currentEra; era = _uncheckedIncr(era)) {
             uint256 balanceBefore = address(this).balance;
+            
+            // if a previous era was unsuccessfully claimed, it must be added to the list
+            if (!isEraDappRewardsClaimedSuccessfully[_currentEra - 1]) {
+                unsuccessfulClaimsOfDappRewards.push(_currentEra - 1);
+            }
+
             try DAPPS_STAKING.claim_dapp_reward(
                 DappsStaking.SmartContract(
                     DappsStaking.SmartContractType.EVM,
                     abi.encodePacked(address(this))
-                ), 
+                ),
                 uint128(era)
             ) {
+                if (!isEraDappRewardsClaimedSuccessfully[_currentEra]) 
+                    isEraDappRewardsClaimedSuccessfully[_currentEra] = true;
+
                 emit ClaimDappSuccess(address(this).balance - balanceBefore, _currentEra);
             } catch (bytes memory reason) {
                 emit ClaimDappError(accumulatedRewardsPerShare[era], era, reason);

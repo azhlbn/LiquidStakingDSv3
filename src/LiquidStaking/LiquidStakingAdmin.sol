@@ -128,6 +128,54 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
         );
     }
 
+    /// @dev claim unsuccessfully claimed eras
+    function syncDappRewards() external onlyRole(MANAGER) {
+        uint256 len = unsuccessfulClaimsOfDappRewards.length;
+        bool[] memory isUnsuccessArr = new bool[](len);
+        uint256 unsuccessCounter;
+
+        uint256 balanceBefore = address(this).balance;
+
+        for (uint256 i; i < len; i = _uncheckedIncr(i)) {
+            uint256 era = unsuccessfulClaimsOfDappRewards[i];
+
+            try DAPPS_STAKING.claim_dapp_reward(
+                    DappsStaking.SmartContract(
+                        DappsStaking.SmartContractType.EVM,
+                        abi.encodePacked(address(this))
+                    ),
+                    uint128(era)
+                )
+            {
+                emit SyncClaimDappSuccess(
+                    address(this).balance - balanceBefore,
+                    era
+                );
+            } catch (bytes memory reason) {
+                isUnsuccessArr[i] = true;
+                unchecked { ++unsuccessCounter; }
+
+                emit SyncClaimDappError(
+                    accumulatedRewardsPerShare[era],
+                    era,
+                    reason
+                );
+            }
+        }
+
+        uint256[] memory newUnsuccessfulClaimsOfDappRewards = new uint256[](unsuccessCounter);
+        uint256 newUnsuccessCounter;
+
+        for (uint256 i; i < len; i = _uncheckedIncr(i)) {
+            if (isUnsuccessArr[i]) {
+                newUnsuccessfulClaimsOfDappRewards[newUnsuccessCounter] = unsuccessfulClaimsOfDappRewards[i];
+                unchecked { ++newUnsuccessCounter; }
+            }
+        }
+
+        unsuccessfulClaimsOfDappRewards = newUnsuccessfulClaimsOfDappRewards;
+    }
+
     // READERS ////////////////////////////////////////////////////////////////////
 
     function getStaker(
@@ -165,5 +213,11 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
     /// @notice Get list with dapps names
     function getDappsList() external view returns (string[] memory) {
         return dappsList;
+    }
+
+    function _uncheckedIncr(uint256 _i) internal pure returns (uint256) {
+        unchecked {
+            return ++_i;
+        }
     }
 }

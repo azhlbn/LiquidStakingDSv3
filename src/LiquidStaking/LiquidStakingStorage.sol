@@ -173,6 +173,9 @@ abstract contract LiquidStakingStorage {
     uint256 notEntered = 1;
     uint256 entered = 2;
     uint256 reentrancyStatus;
+    
+    mapping(uint256 => bool) public isEraDappRewardsClaimedSuccessfully;
+    uint256[] public unsuccessfulClaimsOfDappRewards;
 
     event Staked(address indexed user, uint256 val);
     event StakedInUtility(
@@ -211,6 +214,11 @@ abstract contract LiquidStakingStorage {
         uint256 indexed era,
         bytes indexed reason
     );
+    event SyncClaimDappError(
+        uint256 indexed amount,
+        uint256 indexed era,
+        bytes indexed reason
+    );
     event SetMinStakeAmount(address indexed sender, uint256 amount);
     event WithdrawRevenue(uint256 amount);
     event Synchronization(address indexed sender, uint256 indexed era);
@@ -218,6 +226,7 @@ abstract contract LiquidStakingStorage {
     event FillRewardPool(address indexed sender, uint256 value);
     event FillUnbonded(address indexed sender, uint256 value);
     event ClaimDappSuccess(uint256 receivedRewards, uint256 indexed _era);
+    event SyncClaimDappSuccess(uint256 receivedRewards, uint256 indexed _era);
     event WithdrawUnbondedSuccess(uint256 indexed _era);
     event UnstakeSuccess(uint256 indexed era, uint256 sum2unstake);
     event ClaimStakerSuccess(uint256 indexed era);
