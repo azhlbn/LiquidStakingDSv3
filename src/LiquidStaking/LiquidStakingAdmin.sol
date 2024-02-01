@@ -90,15 +90,6 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
         emit WithdrawRevenue(_amount);
     }
 
-    /// @notice Withdraw rewards overage. Calculates offchain.
-    ///         Formed when users use their nASTR tokens in defi protocols bypassing algem-adapters.
-    function withdrawOverage(
-        uint256 amount
-    ) external payable onlyRole(MANAGER) {
-        rewardPool -= amount;
-        payable(msg.sender).sendValue(amount);
-    }
-
     /// @notice Changing the application address in the event of delisting
     function changeDappAddress(
         string memory _dappName,
@@ -161,9 +152,11 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
                     reason
                 );
             }
-        }
+        } //prettier-ignore
 
-        uint256[] memory newUnsuccessfulClaimsOfDappRewards = new uint256[](unsuccessCounter);
+        uint256[] memory newUnsuccessfulClaimsOfDappRewards = new uint256[](
+            unsuccessCounter
+        );
         uint256 newUnsuccessCounter;
 
         for (uint256 i; i < len; i = _uncheckedIncr(i)) {
@@ -171,7 +164,7 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
                 newUnsuccessfulClaimsOfDappRewards[newUnsuccessCounter] = unsuccessfulClaimsOfDappRewards[i];
                 unchecked { ++newUnsuccessCounter; }
             }
-        }
+        } //prettier-ignore
 
         unsuccessfulClaimsOfDappRewards = newUnsuccessfulClaimsOfDappRewards;
     }
