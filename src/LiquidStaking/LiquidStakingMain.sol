@@ -595,17 +595,10 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         if (voteSubperiod()) {
             period.voteStake = uint256(int256(period.voteStake) + _amount);
             period.buidAndEarnStake = uint256(int256(period.buidAndEarnStake) + _amount);
-            periodsStakes[msg.sender][currentPeriodNumber][0] = uint256(int256(periodsStakes[msg.sender][currentPeriodNumber][0]) + _amount);
-            periodsStakes[msg.sender][currentPeriodNumber][1] = uint256(int256(periodsStakes[msg.sender][currentPeriodNumber][1]) + _amount);
         } else {
             period.buidAndEarnStake = uint256(int256(period.buidAndEarnStake) + _amount);
-            periodsStakes[msg.sender][currentPeriodNumber][1] = uint256(int256(periodsStakes[msg.sender][currentPeriodNumber][1]) + _amount);
+            period.b2eStakes[currentPeriodNumber][msg.sender] += _amount;
         } // prettier-ignore
-
-        require(
-            period.voteStake <= period.buidAndEarnStake,
-            "Unstake size too big"
-        );
     }
 
     /// @notice performed at the beginning of new period and restakes ASTR
@@ -627,24 +620,26 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         // at the beginning of the period contract make restakes at all dapps and claim bonus rewards
         uint256 l = dappsList.length;
         for (uint256 idx; idx < l; idx = _uncheckedIncr(idx)) {
-            try DAPPS_STAKING.stake(
+            Dapp storage dapp = dapps[dappsList[idx]];
+
+            _updateSubperiodStakes(int256(dapp.stakedBalance));
+
+            DAPPS_STAKING.stake(
                 DappsStaking.SmartContract(
                     DappsStaking.SmartContractType.EVM,
-                    abi.encodePacked(dapps[dappsList[idx]].dappAddress)
+                    abi.encodePacked(dapp.dappAddress)
                 ),
-                uint128(dapps[dappsList[idx]].stakedBalance)
-            ) {
-                emit PeriodUpdateStakeSuccess(currentPeriodNumber, dappsList[idx]);
-            } catch (bytes memory reason) {
-                emit PeriodUpdateStakeError(currentPeriodNumber, dappsList[idx], reason);
-            } // prettier-ignore
+                uint128(dapp.stakedBalance)
+            );
+            
+            emit PeriodUpdateStakeSuccess(currentPeriodNumber, dappsList[idx]);
 
             // claim bonus rewards logic
             uint256 balanceBefore = address(this).balance;
             try DAPPS_STAKING.claim_bonus_reward(
                 DappsStaking.SmartContract(
                     DappsStaking.SmartContractType.EVM,
-                    abi.encodePacked(dapps[dappsList[idx]].dappAddress)
+                    abi.encodePacked(dapp.dappAddress)
                 )
             ) {
                 uint256 gain = address(this).balance - balanceBefore;

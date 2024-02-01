@@ -157,14 +157,12 @@ abstract contract LiquidStakingStorage {
         bool initialized;
         uint256 voteStake;
         uint256 buidAndEarnStake;
+
+        /// @dev 1st key is the period number, 2nd key is the user address
+        mapping(uint256 => mapping(address => int256)) b2eStakes;
     }
 
     mapping(uint256 => Period) public periods;
-
-    /// @dev 1st key is users address, 2nd key is current period number
-    ///      0 index  - Voting stakes
-    ///      1 index  - BuildAndEarn stakes
-    mapping(address => mapping(uint256 => uint256[2])) public periodsStakes;
 
     uint256 public maxDappsAmountPerCall;
     uint256 public bonusRewardsPool;
@@ -250,11 +248,6 @@ abstract contract LiquidStakingStorage {
         bytes indexed reason
     );
     event PeriodUpdateStakeSuccess(uint256 indexed period, string dappName);
-    event PeriodUpdateStakeError(
-        uint256 indexed period,
-        string dappName,
-        bytes reason
-    );
     event BonusRewardsClaimSuccess(
         uint256 indexed period,
         string dappName,
