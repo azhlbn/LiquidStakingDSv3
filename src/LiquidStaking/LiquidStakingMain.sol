@@ -382,7 +382,8 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
             uint256 balanceBefore = address(this).balance;
             
             // if a previous era was unsuccessfully claimed, it must be added to the list
-            if (!isEraDappRewardsClaimedSuccessfully[_currentEra - 1]) {
+            if (!isEraDappRewardsClaimedSuccessfully[_currentEra - 1] && !isAddedToUnsuccess[_currentEra - 1]) {
+                isAddedToUnsuccess[_currentEra - 1] = true;
                 unsuccessfulClaimsOfDappRewards.push(_currentEra - 1);
             }
 

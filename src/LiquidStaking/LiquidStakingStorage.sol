@@ -173,6 +173,7 @@ abstract contract LiquidStakingStorage {
     uint256 reentrancyStatus;
     
     mapping(uint256 => bool) public isEraDappRewardsClaimedSuccessfully;
+    mapping(uint256 => bool) public isAddedToUnsuccess;
     uint256[] public unsuccessfulClaimsOfDappRewards;
 
     event Staked(address indexed user, uint256 val);
