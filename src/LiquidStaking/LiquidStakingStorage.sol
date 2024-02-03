@@ -166,11 +166,6 @@ abstract contract LiquidStakingStorage {
 
     uint256 public maxDappsAmountPerCall;
     uint256 public bonusRewardsPool;
-
-    /// @dev Reentrancy protection variables.
-    uint256 notEntered = 1;
-    uint256 entered = 2;
-    uint256 reentrancyStatus;
     
     mapping(uint256 => bool) public isEraDappRewardsClaimedSuccessfully;
     mapping(uint256 => bool) public isAddedToUnsuccess;
@@ -266,13 +261,6 @@ abstract contract LiquidStakingStorage {
     );
     event CleanUpExpiredEntriesSuccess(uint256 indexed period);
     event CleanUpExpiredEntriesError(uint256 indexed period, bytes reason);
-
-    modifier reentrancyGuard() {
-        if (reentrancyStatus == entered) revert Err.ReentrantCall();
-        reentrancyStatus = entered;
-        _;
-        reentrancyStatus = notEntered;
-    }
 
     /// @notice get current period
     function currentPeriod() public view returns (uint256) {

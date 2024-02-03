@@ -131,7 +131,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         string[] memory _utilities,
         uint256[] memory _amounts,
         bool _immediate
-    ) external checkArrays(_utilities, _amounts) updateAll reentrancyGuard {
+    ) external checkArrays(_utilities, _amounts) updateAll {
         uint256 totalUnstaked;
         uint256 era = currentEra();
         uint256 toSendImmediate;
