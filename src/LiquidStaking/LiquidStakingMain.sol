@@ -134,43 +134,35 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
     ) external checkArrays(_utilities, _amounts) updateAll reentrancyGuard {
         uint256 totalUnstaked;
         uint256 era = currentEra();
+        uint256 toSendImmediate;
 
         uint256 utilitiesLength = _utilities.length;
         for (uint256 i; i < utilitiesLength; ++i) {
             if (_amounts[i] != 0) {
-                string memory _utility = _utilities[i];
-                uint256 _amount = _amounts[i];
-
-                uint256 userDntBalance = distr.getUserDntBalanceInUtil(
-                    msg.sender,
-                    _utility,
-                    DNTname
-                );
-
                 require(
-                    userDntBalance >= _amount,
+                    distr.getUserDntBalanceInUtil(msg.sender, _utilities[i], DNTname) >= _amounts[i],
                     "Not enough nASTR in utility"
                 );
 
-                Dapp storage dapp = dapps[_utility];
-                _harvestRewards(_utility, msg.sender);
-                _updatePreviousEra(dapp, era, _amount);
+                Dapp storage dapp = dapps[_utilities[i]];
+                _harvestRewards(_utilities[i], msg.sender);
+                _updatePreviousEra(dapp, era, _amounts[i]);
 
-                dapp.sum2unstake += _amount;
-                totalBalance -= _amount;
-                dapp.stakedBalance -= _amount;
+                dapp.sum2unstake += _amounts[i];
+                totalBalance -= _amounts[i];
+                dapp.stakedBalance -= _amounts[i];
 
-                distr.removeDnt(msg.sender, _amount, _utility, DNTname);
+                distr.removeDnt(msg.sender, _amounts[i], _utilities[i], DNTname);
 
                 if (_immediate) {
                     require(
-                        unstakingPool >= _amount,
+                        unstakingPool >= _amounts[i],
                         "Unstaking pool drained!"
                     );
-                    uint256 fee = _amount / 100; // 1% immediate unstaking fee
-                    totalRevenue += fee;
-                    unstakingPool -= _amount;
-                    payable(msg.sender).sendValue(_amount - fee);
+                    totalRevenue += _amounts[i] / 100; // 1% immediate unstaking fee
+                    unstakingPool -= _amounts[i];
+
+                    toSendImmediate += _amounts[i] - _amounts[i] / 100;
                 } else {
                     uint256 _lag;
 
@@ -180,20 +172,21 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
 
                     // create a withdrawal to withdraw_unbonded later
                     withdrawals[msg.sender].push(
-                        Withdrawal({val: _amount, eraReq: era, lag: _lag})
+                        Withdrawal({val: _amounts[i], eraReq: era, lag: _lag})
                     );
                 }
 
-                totalUnstaked += _amount;
+                totalUnstaked += _amounts[i];
 
                 emit UnstakedFromUtility(
                     msg.sender,
-                    _utility,
-                    _amount,
+                    _utilities[i],
+                    _amounts[i],
                     _immediate
                 );
             }
         }
+        
         if (totalUnstaked != 0) {
             _updateSubperiodStakes(~int256(totalUnstaked) + 1); // convert arg to negative number
 
@@ -201,6 +194,8 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
 
             emit Unstaked(msg.sender, totalUnstaked, _immediate);
         }
+
+        if (toSendImmediate != 0) payable(msg.sender).sendValue(toSendImmediate);
     }
 
     /// @notice claim user rewards from utilities
