@@ -11,12 +11,12 @@ contract LiquidStakingMigration is AccessControlUpgradeable, LiquidStakingStorag
         Withdrawal[] memory arr = withdrawals[user];
 
         for (uint256 i; i < arr.length; i = _uncheckedIncr(i)) {
-            uint256 finalUnbondingEra = arr[i].eraReq * 10 + arr[i].lag + withdrawBlock * 10; // era in which unbonding period ends
+            uint256 unbondedEraX10 = arr[i].eraReq * 10 + arr[i].lag + withdrawBlock * 10; // era in which unbonding period ends
 
-            if (finalUnbondingEra >= firstV3Era * 10 && arr[i].lag != 100) {
+            if (unbondedEraX10 >= firstV3Era * 10 && arr[i].lag != 50) {
                 Withdrawal storage withdrawal = withdrawals[user][i];
-                withdrawal.eraReq = withdrawal.eraReq - finalUnbondingEra - firstV3Era * 10;
-                withdrawal.lag = 100; // necessary to prevent double spending
+                withdrawal.eraReq = firstV3Era - withdrawBlock - 5;
+                withdrawal.lag = 50; // necessary to prevent double spending
 
                 temporaryUnbondedPool += withdrawal.val;
             }
@@ -35,7 +35,7 @@ contract LiquidStakingMigration is AccessControlUpgradeable, LiquidStakingStorag
         Withdrawal[] memory arr = withdrawals[user];
 
         for (uint256 i; i < arr.length; i = _uncheckedIncr(i)) {
-            if (arr[i].eraReq * 10 + arr[i].lag + withdrawBlock * 10 >= firstV3Era * 10) return true;
+            if (arr[i].eraReq * 10 + arr[i].lag + withdrawBlock * 10 >= firstV3Era * 10 && arr[i].lag != 50) return true;
         }
 
         return false;
