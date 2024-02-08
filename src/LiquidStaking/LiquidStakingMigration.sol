@@ -5,8 +5,6 @@ import "@openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
 import "./LiquidStakingStorage.sol";
 
 contract LiquidStakingMigration is AccessControlUpgradeable, LiquidStakingStorage {
-    using AddressUpgradeable for address payable;
-    using AddressUpgradeable for address;
 
     /// @dev Adjust the user's eraReq in case the unbonding period crosses the migration process
     function syncUnbondingEra(address user, uint256 firstV3Era) external onlyRole(MANAGER) {
@@ -25,28 +23,12 @@ contract LiquidStakingMigration is AccessControlUpgradeable, LiquidStakingStorag
         }
     }
 
-    /// @dev Need to be called immediately after migration to sync unbondedPool and lock ASTR
+    /// @dev Need to be called immediately after migration to sync unbondedPool
     function migration() external onlyRole(MANAGER) {
-        _lockUpStakes();
-
         unbondedPool += temporaryUnbondedPool;
     }
-
-    /// @dev Since all stakes released due to DappsStakingV3 migrations process, we need to lock all our early staked tokens again
-    function _lockUpStakes() private {
-        uint256 l = dappsList.length;
-        for (uint256 idx; idx < l; idx = _uncheckedIncr(idx)) {
-            Dapp storage dapp = dapps[dappsList[idx]];
-
-            DAPPS_STAKING.stake(
-                DappsStaking.SmartContract(
-                    DappsStaking.SmartContractType.EVM,
-                    abi.encodePacked(dapp.dappAddress)
-                ),
-                uint128(dapp.stakedBalance)
-            );
-        }
-    } 
+    
+    // READERS ////////////////////////////////////////////////////////////////////
 
     /// @dev check if passed user address has any unbonding periods that are passed on during migration
     function isSyncUnbondingEraNeeded(address user, uint256 firstV3Era) external view returns (bool) {
