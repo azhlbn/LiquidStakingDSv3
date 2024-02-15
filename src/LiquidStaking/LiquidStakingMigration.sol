@@ -7,10 +7,21 @@ import "./LiquidStakingStorage.sol";
 contract LiquidStakingMigration is AccessControlUpgradeable, LiquidStakingStorage {
 
     /// @dev Adjust the user's eraReq in case the unbonding period crosses the migration process
-    function syncUnbondingEra(address user, uint256 firstV3Era) external onlyRole(MANAGER) {
+    function syncUnbondingEra(
+        address user, 
+        uint256 firstV3Era, 
+        uint256 startIdx, 
+        uint256 endIdx
+    ) external onlyRole(MANAGER) {
         Withdrawal[] memory arr = withdrawals[user];
 
-        for (uint256 i; i < arr.length; i = _uncheckedIncr(i)) {
+        require(
+            startIdx < endIdx &&
+            endIdx - startIdx < arr.length, 
+            "Wrong range"
+        );
+
+        for (uint256 i = startIdx; i <= endIdx; i = _uncheckedIncr(i)) {
             uint256 unbondedEraX10 = arr[i].eraReq * 10 + arr[i].lag + withdrawBlock * 10; // era in which unbonding period ends
 
             if (unbondedEraX10 >= firstV3Era * 10 && arr[i].lag != 50) {
