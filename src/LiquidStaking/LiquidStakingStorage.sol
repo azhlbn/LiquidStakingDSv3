@@ -151,6 +151,7 @@ abstract contract LiquidStakingStorage {
     address public liquidStakingManager;
 
     bool public paused;
+    bool public partiallyPaused;
 
     // ds v3 update
     struct Period {

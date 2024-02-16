@@ -169,6 +169,16 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
         unsuccessfulClaimsOfDappRewards = newUnsuccessfulClaimsOfDappRewards;
     }
 
+    function partiallyPause() external onlyRole(MANAGER) {
+        require(!partiallyPaused, "Already partially paused");
+        partiallyPaused = true;
+    }
+
+    function partiallyUnpause() external onlyRole(MANAGER) {
+        require(partiallyPaused, "Not partially paused");
+        partiallyPaused = false;
+    }
+
     // READERS ////////////////////////////////////////////////////////////////////
 
     function getStaker(
@@ -206,6 +216,10 @@ contract LiquidStakingAdmin is AccessControlUpgradeable, LiquidStakingStorage {
     /// @notice Get list with dapps names
     function getDappsList() external view returns (string[] memory) {
         return dappsList;
+    }
+
+    function getStakers() external view returns (address[] memory) {
+        return stakers;
     }
 
     function _uncheckedIncr(uint256 _i) internal pure returns (uint256) {

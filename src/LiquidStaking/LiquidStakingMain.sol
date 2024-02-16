@@ -54,6 +54,11 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         _;
     }
 
+    modifier whenNotPartiallyPaused() {
+        require(!partiallyPaused || hasRole(MANAGER, msg.sender), "Contract partially paused");
+        _;
+    }
+
     /// @notice stake native tokens, receive equal amount of DNT
     /// @param _utilities => dapps utilities
     /// @param _amounts => amounts of tokens to stake
@@ -244,7 +249,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
 
     /// @notice finish previously opened withdrawal
     /// @param _id => withdrawal index
-    function withdraw(uint _id) external updateAll {
+    function withdraw(uint _id) external whenNotPartiallyPaused updateAll {
         Withdrawal storage withdrawal = withdrawals[msg.sender][_id];
         uint val = withdrawal.val;
         uint era = currentEra();
@@ -521,7 +526,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
     function _claim(
         string[] memory _utilities,
         uint256[] memory _amounts
-    ) internal {
+    ) internal whenNotPartiallyPaused {
         if (isPartner[msg.sender]) revert Err.PartnerPoolsCanNotClaim();
 
         uint256 l = _utilities.length;
