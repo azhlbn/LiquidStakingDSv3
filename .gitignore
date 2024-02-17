@@ -1,3 +1,7 @@
+flattened/
+src/mock/
+test/
+
 # Compiler files
 cache/
 out/
