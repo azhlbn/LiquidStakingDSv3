@@ -607,7 +607,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         uint256 currentPeriodNumber = currentPeriod();
         Period storage period = periods[currentPeriodNumber];
 
-        if (!period.initialized) return;
+        if (period.initialized) return;
 
         period.initialized = true;
 
@@ -622,6 +622,9 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         uint256 l = dappsList.length;
         for (uint256 idx; idx < l; idx = _uncheckedIncr(idx)) {
             Dapp storage dapp = dapps[dappsList[idx]];
+
+            unbondedPool += dapp.sum2unstake;
+            dapp.sum2unstake = 0;
 
             _updateSubperiodStakes(int256(dapp.stakedBalance));
 
