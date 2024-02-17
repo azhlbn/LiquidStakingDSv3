@@ -172,6 +172,9 @@ abstract contract LiquidStakingStorage {
     mapping(uint256 => bool) public isAddedToUnsuccess;
     uint256[] public unsuccessfulClaimsOfDappRewards;
 
+    /// @dev temporary pool that fixes the number of ASTR by which the unbondedPool will be replenished during migration
+    uint256 public temporaryUnbondedPool;
+
     event Staked(address indexed user, uint256 val);
     event StakedInUtility(
         address indexed user,

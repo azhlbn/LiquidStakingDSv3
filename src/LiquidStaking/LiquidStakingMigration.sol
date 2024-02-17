@@ -28,8 +28,15 @@ contract LiquidStakingMigration is AccessControlUpgradeable, LiquidStakingStorag
                 Withdrawal storage withdrawal = withdrawals[user][i];
                 withdrawal.eraReq = firstV3Era - withdrawBlock - 5;
                 withdrawal.lag = 50; // necessary to prevent double spending
+
+                temporaryUnbondedPool += withdrawal.val;
             }
         }
+    }
+
+    /// @dev Need to be called immediately after migration to sync unbondedPool
+    function migration() external onlyRole(MANAGER) {
+        unbondedPool += temporaryUnbondedPool;
     }
     
     // READERS ////////////////////////////////////////////////////////////////////
