@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.4;
+
+import "@openzeppelin-upgradeable/access/AccessControlUpgradeable.sol";
+import "./LiquidStakingStorage.sol";
+
 contract LiquidStakingMigration is AccessControlUpgradeable, LiquidStakingStorage {
 
     /// @dev Adjust the user's eraReq in case the unbonding period crosses the migration process
