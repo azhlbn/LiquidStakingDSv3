@@ -80,7 +80,13 @@ contract ArthswapAdapter is OwnableUpgradeable, ReentrancyGuardUpgradeable, IPar
     // @notice Updates rewards
     modifier update() {
         // check if there are unclaimed rewards
-        uint256 unclaimedRewards = farm.pendingARSW(pid, address(this));
+        uint256 unclaimedRewards;
+
+        // try/catch block added to avoid the error, occuring in the Arthswap contract when rewards amount eq to zero. Agreed with Arthswap
+        try farm.pendingARSW(pid, address(this)) returns (uint256 rewards) {
+            unclaimedRewards = rewards;
+        } catch {}
+
         if (unclaimedRewards > 0) {
             updatePoolRewards();
         }
