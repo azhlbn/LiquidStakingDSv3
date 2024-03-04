@@ -249,7 +249,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
 
     /// @notice finish previously opened withdrawal
     /// @param _id => withdrawal index
-    function withdraw(uint _id) external whenNotPartiallyPaused updateAll {
+    function withdraw(uint _id) external updateAll {
         Withdrawal storage withdrawal = withdrawals[msg.sender][_id];
         uint val = withdrawal.val;
         uint era = currentEra();
