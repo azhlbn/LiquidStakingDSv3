@@ -41,7 +41,7 @@ abstract contract LiquidStakingStorage {
     /// @notice user requested withdrawals
     struct Withdrawal {
         uint256 val;
-        uint256 eraReq;
+        uint256 blockReq;
         uint256 lag;
     }
     mapping(address => Withdrawal[]) public withdrawals;
@@ -171,6 +171,10 @@ abstract contract LiquidStakingStorage {
     mapping(uint256 => bool) public isEraDappRewardsClaimedSuccessfully;
     mapping(uint256 => bool) public isAddedToUnsuccess;
     uint256[] public unsuccessfulClaimsOfDappRewards;
+
+    uint256 public unlockingPeriod; // eq to 64800 or 9 eras in b2e period
+    uint256 public maxUnlockingChunks; // 8
+    uint256 public chunkLen; // one chunk length, eq to unlockingPeriod divided by maxUnlockingChunks(8) or 8100 blocks
 
     event Staked(address indexed user, uint256 val);
     event StakedInUtility(

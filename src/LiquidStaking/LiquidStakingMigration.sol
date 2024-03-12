@@ -6,44 +6,36 @@ import "./LiquidStakingStorage.sol";
 
 contract LiquidStakingMigration is AccessControlUpgradeable, LiquidStakingStorage {
 
-    /// @dev Adjust the user's eraReq in case the unbonding period crosses the migration process
-    function syncUnbondingEra(
-        address user, 
-        uint256 firstEra, 
-        uint256 startIdx, 
-        uint256 endIdx
+    /// @notice Temporary logic for updating params needed for unlocking process
+    function updateParams(uint256 _lastUnstaked) external onlyRole(MANAGER) {
+        lastUnstaked = _lastUnstaked;
+
+        unlockingPeriod = 64800;
+        maxUnlockingChunks = 8;
+        chunkLen = unlockingPeriod / maxUnlockingChunks;
+    }
+
+    /// @dev Temporary logic for unlocking stucked ASTR in DappsStaking due to the migration process
+    function unlockStucked(uint128 _amount) external onlyRole(MANAGER) {
+        DAPPS_STAKING.unlock(_amount);
+
+        emit UnlockSuccess();
+    }
+
+    /// @dev Temporary logic for correction user's unlocking periods
+    function setBlockReq(
+        address _user, 
+        uint256 _withdrawalId, 
+        uint256 _blockReq,
+        uint256 _lag
     ) external onlyRole(MANAGER) {
-        Withdrawal[] memory arr = withdrawals[user];
+        Withdrawal[] memory arr = withdrawals[_user];
 
-        require(
-            startIdx < endIdx &&
-            endIdx - startIdx < arr.length, 
-            "Wrong range"
-        );
-
-        for (uint256 i = startIdx; i <= endIdx; i = _uncheckedIncr(i)) {
-            uint256 unbondedEraX10 = arr[i].eraReq * 10 + arr[i].lag + withdrawBlock * 10; // era in which unbonding period ends
-
-            if (unbondedEraX10 >= firstEra * 10 && arr[i].lag != 50) {
-                Withdrawal storage withdrawal = withdrawals[user][i];
-                withdrawal.eraReq = firstEra - withdrawBlock - 5;
-                withdrawal.lag = 50; // necessary to prevent double spending
-            }
-        }
+        arr[_withdrawalId].blockReq = _blockReq;
+        arr[_withdrawalId].lag = _lag;
     }
     
     // READERS ////////////////////////////////////////////////////////////////////
-
-    /// @dev check if passed user address has any unbonding periods that are passed on during migration
-    function isSyncUnbondingEraNeeded(address user, uint256 firstEra) external view returns (bool) {
-        Withdrawal[] memory arr = withdrawals[user];
-
-        for (uint256 i; i < arr.length; i = _uncheckedIncr(i)) {
-            if (arr[i].eraReq * 10 + arr[i].lag + withdrawBlock * 10 >= firstEra * 10 && arr[i].lag != 50) return true;
-        }
-
-        return false;
-    }
 
     function _uncheckedIncr(uint256 _i) internal pure returns (uint256) {
         unchecked {

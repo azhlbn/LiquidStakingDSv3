@@ -170,14 +170,15 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
                     toSendImmediate += _amounts[i] - _amounts[i] / 100;
                 } else {
                     uint256 _lag;
+                    uint256 currentBlock = block.number;
 
-                    if (lastUnstaked * 10 + (withdrawBlock * 10) >> 2 > era * 10) {
-                        _lag = lastUnstaked * 10 + (withdrawBlock * 10) >> 2 - era * 10; 
+                    if (lastUnstaked + chunkLen > currentBlock) {
+                        _lag = lastUnstaked + chunkLen - currentBlock; 
                     } // prettier-ignore
 
                     // create a withdrawal to withdraw_unbonded later
                     withdrawals[msg.sender].push(
-                        Withdrawal({val: _amounts[i], eraReq: era, lag: _lag})
+                        Withdrawal({val: _amounts[i], blockReq: currentBlock, lag: _lag})
                     );
                 }
 
@@ -251,21 +252,20 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
     /// @param _id => withdrawal index
     function withdraw(uint _id) external updateAll {
         Withdrawal storage withdrawal = withdrawals[msg.sender][_id];
-        uint val = withdrawal.val;
-        uint era = currentEra();
+        uint256 val = withdrawal.val;
+        uint256 currentBlock = block.number;        
 
-        if (withdrawal.eraReq == 0) revert Err.AlreadyClaimed();
+        if (withdrawal.blockReq == 0) revert Err.AlreadyClaimed();
 
         require(
-            era * 10 - withdrawal.eraReq * 10 >=
-                withdrawBlock * 10 + withdrawal.lag,
-            "Not enough eras passed!"
-        );
+            currentBlock - withdrawal.blockReq >= unlockingPeriod + withdrawal.lag,
+            "Not enough blocks passed!"
+        ); // prettier-ignore
 
         if (unbondedPool < val) revert Err.UnbondedPoolInsufficientFunds();
 
         unbondedPool -= val;
-        withdrawal.eraReq = 0;
+        withdrawal.blockReq = 0;
 
         payable(msg.sender).sendValue(val);
         emit Withdrawn(msg.sender, val);
@@ -420,15 +420,16 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
     /// @notice ustake tokens from not yet updated eras from all dapps
     /// @param _era => latest era to update
     function _globalUnstake(uint256 _era) internal {
-        if (_era * 10 < (lastUnstaked * 10 + (withdrawBlock * 10)) >> 2) return;
+        uint256 currentBlock = block.number;
 
+        if (currentBlock < (lastUnstaked + chunkLen)) return;
         // unstake from all dapps
         uint256 l = dappsList.length;
         for (uint256 i; i < l; i = _uncheckedIncr(i)) {
             _globalUnstakeForUtility(dappsList[i], _era);
         }
 
-        lastUnstaked = _era;
+        lastUnstaked = currentBlock;
     }
 
     /// @notice ustake tokens from not yet updated eras from utility
@@ -452,6 +453,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         {
             try DAPPS_STAKING.unlock(uint128(dapp.sum2unstake)) {
                 dapp.sum2unstake = 0;
+
                 emit UnlockSuccess();
             } catch (bytes memory reason) {
                 emit UnlockError(_utility, dapp.sum2unstake, _era, reason);
@@ -622,9 +624,6 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
         uint256 l = dappsList.length;
         for (uint256 idx; idx < l; idx = _uncheckedIncr(idx)) {
             Dapp storage dapp = dapps[dappsList[idx]];
-
-            unbondedPool += dapp.sum2unstake;
-            dapp.sum2unstake = 0;
 
             _updateSubperiodStakes(int256(dapp.stakedBalance));
 

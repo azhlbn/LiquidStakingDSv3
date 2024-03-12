@@ -168,6 +168,8 @@ contract NDistributor is Initializable, AccessControlUpgradeable {
         // and the index will differ from the one in utilityDB
         utilityDB.push(Utility("empty", false));
         dntDB.push(Dnt("empty", false));
+        dntDB.push(Dnt("nASTR", true));
+        dntId["nASTR"] = 1;
 
         utilityDB.push(Utility("null", true));
         utilityId["null"] = 1;

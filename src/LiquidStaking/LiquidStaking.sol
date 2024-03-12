@@ -23,7 +23,8 @@ contract LiquidStaking is AccessControlUpgradeable, LiquidStakingStorage, Proxy 
     function initialize(
         string memory _DNTname,
         string memory _utilName,
-        address _distrAddr
+        address _distrAddr,
+        address _adaptersDistr
     ) external initializer {
         require(_distrAddr.isContract(), "_distrAddr should be contract address");
         DNTname = _DNTname;
@@ -48,6 +49,8 @@ contract LiquidStaking is AccessControlUpgradeable, LiquidStakingStorage, Proxy 
 
         minStakeAmount = 10;
         maxDappsAmountPerCall = 20;
+
+        adaptersDistr = IAdaptersDistributor(_adaptersDistr); 
     }
 
     function pause() external onlyRole(MANAGER) {
@@ -76,4 +79,10 @@ contract LiquidStaking is AccessControlUpgradeable, LiquidStakingStorage, Proxy 
     function withdraw(uint _id) external {
         _delegate(_implementation());
     }
+
+    function setNftDistributor(address _nftDistr) external onlyRole(MANAGER) {
+        nftDistr = INFTDistributor(_nftDistr);
+    }
+
+    receive() external override payable {}
 }   
