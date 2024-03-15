@@ -250,7 +250,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
 
     /// @notice finish previously opened withdrawal
     /// @param _id => withdrawal index
-    function withdraw(uint _id) external updateAll {
+    function withdraw(uint _id) external updateAll whenNotPartiallyPaused {
         Withdrawal storage withdrawal = withdrawals[msg.sender][_id];
         uint256 val = withdrawal.val;
         uint256 currentBlock = block.number;        
@@ -528,7 +528,7 @@ contract LiquidStakingMain is AccessControlUpgradeable, LiquidStakingStorage {
     function _claim(
         string[] memory _utilities,
         uint256[] memory _amounts
-    ) internal whenNotPartiallyPaused {
+    ) internal {
         if (isPartner[msg.sender]) revert Err.PartnerPoolsCanNotClaim();
 
         uint256 l = _utilities.length;
